@@ -1,0 +1,25 @@
+NOTE: Yes I know that there are many other 'github' scripts that will do most of what I want, sadly all the ones that I've played with get me close but don't do exactly what I want... thus I'm making my own. This is going to be a very me focused project so you might or might not be able to use this to do anything else. 
+
+Just wanted to get that out there.
+
+GOAL: 
+
+Lets say that I've got a GH fork of some project. I want to be able to type something like: 
+
+<code>
+> ghub.pl clone notbenh/some_project
+</code>
+
+What I want this to do is:
+1) check to see if there is a repo notbenh/some_project if so clone
+2) if said repo is a fork, add a remote 'upstream' and '$username' for the forked-from repo
+
+EXTRA BONUS: 
+
+Because I'm going to be playing with the GitHub API already to do the fork check it should be simple to also allow said script to clone more then a single project, like:
+
+<code>
+> ghub.pl clone notbenh # clone all my repos including watched
+</code>
+
+and if I get around to it I might get around to building a 'update' command that would update all my local repos ... though this is more a TODO list at this point.
