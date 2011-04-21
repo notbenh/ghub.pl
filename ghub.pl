@@ -85,7 +85,19 @@ sub show  {
   }
 }
 
-  
+sub clone {
+  my $self = shift;
+  my $user = shift;
+  foreach my $name (@_) {
+    foreach my $repo ( @{ $self->show($user => $name) } ) {
+      D {REPO => $repo};
+      my $cmd = sprintf q{git clone %s}, $repo->{url};
+      $cmd .= sprintf q{ && cd %s && git remote add upstream %s && cd ..}, $repo->{name}, $repo->{parent}
+           if exists $repo->{parent};
+      D {CMD => $cmd};
+    }
+  }
+}  
 
 }; # END
 
