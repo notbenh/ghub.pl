@@ -96,7 +96,11 @@ sub clone {
   my $user = shift;
  
   sub urlarize {
-    
+    my ($mine, $url) = @_;
+    $mine ? sprintf q{git@github.com:%s}, $url =~ m{github\.com/(.*)$}
+          : sprintf q{git://%s}         , $url =~ m{://(.*)$}
+    ;
+  }
  
   foreach my $name (@_) {
     foreach my $repo ( @{ $self->show($user => $name) } ) {
@@ -104,12 +108,12 @@ sub clone {
         warn sprintf q{%s already exists, skipping}, $repo->{name};
         next;
       }
-      my $cmd = sprintf q{git clone %s}, $repo->{url};
+      my $cmd = sprintf q{git clone %s}, urlarize($repo->{owner} eq $self->username, $repo->{url});
       $cmd .= sprintf q{ && cd %s && git remote add upstream %s && cd ..}, $repo->{name}, $repo->{parent}
            if exists $repo->{parent};
       
-      #qx{$cmd};
-      D {CMD => $cmd};
+      #D {CMD => $cmd};
+      qx{$cmd};
     }
   }
 }  
@@ -117,7 +121,7 @@ sub clone {
 sub replicate { # effectivly clone-all
   my $self = shift;
   my $user = shift;
-  map{$self->clone($_->{owner} => $_->{name})  # 3: clone that repo
+  map{$self->clone($_->{owner} => $_->{name}); # 3: clone that repo
       sleep(1)                                 # 4: be kind to the github
      }                                         
    map{@$_}                                    # 2: deref the value
