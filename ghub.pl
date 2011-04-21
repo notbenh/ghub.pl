@@ -54,7 +54,7 @@ has repos    =>
     #}
     my $out = {};
     foreach my $repo ( @{ $self->get(qw{repos watched}, $self->username)->{repositories} } ,
-                       @{ $self->get(qw{repos show},    $self->username)->{repositories} }
+                       @{ $self->get(qw{repos show},    $self->username)->{repositories} } # this is paged to 30 items, set up pagination 
                      ) {
       my $type = $repo->{fork}                       ? 'fork'
                : $repo->{owner} ne $self->{username} ? 'watched'
@@ -68,12 +68,18 @@ has repos    =>
 ;
 
 sub mkurl { join '/', shift->host, @_; } 
-sub get   { from_json( LWP::Simple::get( shift->mkurl(@_) ) ) } # can not use 'around' due to get being a function
+sub get   { # can not use 'around' due to get being a function
+  my $url = shift->mkurl(@_);
+  my $ret;
+  eval { $ret = LWP::Simple::get( $url );
+         from_json( $ret );
+       } or do { die sprintf q{ERROR: %s did not return valid JSON, got %s instead.}, $url, $ret };
+}
 sub show  {
   my $self = shift;
   my $user = shift;
   die 'A username is require to be passed to show' unless $user;
-  $self->username($user) unless $self->has_username;
+  $self->username($user) unless $self->has_username; # this is a catch to allow replicate and others to pass a username and not 'set it' when they loop
   if (@_) {
     [ map{ my $R = $self->repos->{by_name}->{$_}; # this is going to be an arrayref (we deref below)
            map{ $self->get(qw{repos show}, $_->{owner}, $_->{name})->{repository} } @$R
@@ -88,6 +94,10 @@ sub show  {
 sub clone {
   my $self = shift;
   my $user = shift;
+ 
+  sub urlarize {
+    
+ 
   foreach my $name (@_) {
     foreach my $repo ( @{ $self->show($user => $name) } ) {
       if (-d $repo->{name} ) {
@@ -98,10 +108,21 @@ sub clone {
       $cmd .= sprintf q{ && cd %s && git remote add upstream %s && cd ..}, $repo->{name}, $repo->{parent}
            if exists $repo->{parent};
       
-      qx{$cmd};
+      #qx{$cmd};
+      D {CMD => $cmd};
     }
   }
 }  
+
+sub replicate { # effectivly clone-all
+  my $self = shift;
+  my $user = shift;
+  map{$self->clone($_->{owner} => $_->{name})  # 3: clone that repo
+      sleep(1)                                 # 4: be kind to the github
+     }                                         
+   map{@$_}                                    # 2: deref the value
+   values %{ $self->show($user)->{by_name} };  # 1: use show to get all the repos that this user has access to (including watched)
+}
 
 }; # END
 
