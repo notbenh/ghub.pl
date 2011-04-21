@@ -121,7 +121,8 @@ sub clone {
 sub replicate { # effectivly clone-all
   my $self = shift;
   my $user = shift;
-  map{$self->clone($_->{owner} => $_->{name}); # 3: clone that repo
+  map{printf qq{[%s]\n}, $_->{name};
+      $self->clone($_->{owner} => $_->{name}); # 3: clone that repo
       sleep(1)                                 # 4: be kind to the github
      }                                         
    map{@$_}                                    # 2: deref the value
