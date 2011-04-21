@@ -4,7 +4,7 @@ use warnings;
 use Data::Dumper;
 sub DUMP(@) { Dumper(@_) }
 sub D(@){ print DUMP(@_) }
-
+ $|++;
 =head1 USEAGE
 
   ghub.pl clone username/repo
@@ -22,7 +22,7 @@ my $action = shift @ARGV;
 help() if $action eq 'help';
 
 die qq{$action is not a known action} unless $hub->can($action);
-D $hub->$action(@ARGV);
+$hub->$action(@ARGV);
 
 
 #------------------------------------------------
@@ -90,11 +90,15 @@ sub clone {
   my $user = shift;
   foreach my $name (@_) {
     foreach my $repo ( @{ $self->show($user => $name) } ) {
-      D {REPO => $repo};
+      if (-d $repo->{name} ) {
+        warn sprintf q{%s already exists, skipping}, $repo->{name};
+        next;
+      }
       my $cmd = sprintf q{git clone %s}, $repo->{url};
       $cmd .= sprintf q{ && cd %s && git remote add upstream %s && cd ..}, $repo->{name}, $repo->{parent}
            if exists $repo->{parent};
-      D {CMD => $cmd};
+      
+      qx{$cmd};
     }
   }
 }  
