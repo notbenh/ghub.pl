@@ -21,7 +21,7 @@ my $hub = My::GitHub->new;
 my $action = shift @ARGV;
 help() if $action eq 'help';
 
-die qq{$action is not a known action} unless $hub->can($action);
+die qq{$action is not a known action\n} unless $hub->can($action);
 $hub->$action(@ARGV);
 
 
@@ -105,7 +105,7 @@ sub clone {
   foreach my $name (@_) {
     foreach my $repo ( @{ $self->show($user => $name) } ) {
       if (-d $repo->{name} ) {
-        warn sprintf q{%s already exists, skipping}, $repo->{name};
+        warn sprintf qq{%s already exists, skipping\n}, $repo->{name};
         next;
       }
       my $cmd = sprintf q{git clone %s}, urlarize($repo->{owner} eq $self->username, $repo->{url});
@@ -128,6 +128,16 @@ sub replicate { # effectivly clone-all
    map{@$_}                                    # 2: deref the value
    values %{ $self->show($user)->{by_name} };  # 1: use show to get all the repos that this user has access to (including watched)
 }
+
+sub refurb { # for all sub-dirs check and see if they are git repos and then 'update' by --fetch all and --reset hard
+  my $self = shift;
+  $|++;
+  foreach my $git ( map{$_ =~ m{(.*)/\.git}
+                       } qx{find . -maxdepth 2 -mindepth 1 -type d -name .git} # file find is stupid and will always recurse even when I don't want it to... 
+                  ) {
+    print qx{ echo '[$git]' && cd $git && git fetch --all && git reset --hard && cd ..};
+  }
+} 
 
 }; # END
 
