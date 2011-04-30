@@ -7,7 +7,9 @@ sub D(@){ print DUMP(@_) }
  $|++;
 =head1 USEAGE
 
-  ghub.pl clone username/repo
+  ghub.pl clone username/repo # clone and set up remotes for specific repo
+  ghub.pl replicate username  # call clone on all of usernames repos
+  ghub.pl show username       # collect and display all known repos for username
 
 =cut
 
