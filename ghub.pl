@@ -10,6 +10,7 @@ sub D(@){ print DUMP(@_) }
   ghub.pl clone username/repo # clone and set up remotes for specific repo
   ghub.pl replicate username  # call clone on all of usernames repos
   ghub.pl show username       # collect and display all known repos for username
+  ghub.pl refurb              # attempt to 'update' all git repos that are subdirs of the current path
 
 =cut
 
